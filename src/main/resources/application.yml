@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: banking
+  datasource:
+    url: jdbc:mysql://localhost:3306/banking_db
+    username: root
+    password: '@9110933739S'
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+jwt:
+  secret: kX9#mP2$vL8%zQ4^wR1&nT5*fY3!bH6@
