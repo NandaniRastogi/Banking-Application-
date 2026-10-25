@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
-@RequiredArgsConstructor
+@RequiredArgsConstructor 
 @RequestMapping("/api/accounts")
 public class AccountController {
 
@@ -41,7 +41,7 @@ public class AccountController {
     }
 
     @GetMapping
-    public ResponseEntity<AccountResponse> getAccountById(@RequestParam Long id) throws Exception {
+    public ResponseEntity<AccountResponse> getAccountById(@RequestParam Long id) {
 
         Account account = accountService.getAccountById(id);
 
@@ -66,7 +66,7 @@ public class AccountController {
     }
 
     @DeleteMapping
-    public ResponseEntity<String> closeAccount(@RequestParam Long id) throws Exception {
+    public ResponseEntity<String> closeAccount(@RequestParam Long id) {
 
         accountService.closeAccount(id);
 

@@ -3,7 +3,6 @@ package com.nandani.banking.serviceImpl;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
-import java.util.Optional;
 
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,10 +12,12 @@ import com.nandani.banking.dto.ForgotPasswordRequest;
 import com.nandani.banking.dto.ResetPasswordRequest;
 import com.nandani.banking.entitiy.PasswordResetToken;
 import com.nandani.banking.entitiy.User;
+import com.nandani.banking.exception.EmailNotFoundException;
+import com.nandani.banking.exception.TokenNotFoundException;
+import com.nandani.banking.exception.TokenResetExpired;
 import com.nandani.banking.repository.PasswordResetTokenRepository;
 import com.nandani.banking.repository.UserRepository;
 import com.nandani.banking.service.PasswordResetService;
-import com.nandani.banking.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -32,7 +33,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     public String generateRandomToken(ForgotPasswordRequest forgotPasswordRequest) {
 
         User dbUser = userRepository.findByEmail(forgotPasswordRequest.getEmail())
-                .orElseThrow(() -> new UsernameNotFoundException("Wrong Email Message"));
+                .orElseThrow(() -> new EmailNotFoundException("Wrong Email Message"));
 
         PasswordResetToken passwordResetToken = passwordResetTokenRepository.findByUser(dbUser)
                 .orElse(new PasswordResetToken());
@@ -58,15 +59,15 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     }
 
     @Override
-    public String validateAndResetPassword(ResetPasswordRequest resetPasswordRequest) throws Exception {
+    public String validateAndResetPassword(ResetPasswordRequest resetPasswordRequest) {
 
         PasswordResetToken passwordResetToken = passwordResetTokenRepository
                 .findByToken(resetPasswordRequest.getToken())
-                .orElseThrow(() -> new Exception("Token not found Exception"));
+                .orElseThrow(() -> new TokenNotFoundException("Token not found Exception"));
 
         if (passwordResetToken.getExpiryDateTime().isBefore(LocalDateTime.now())) {
 
-            throw new Exception("Token Reset Expired");
+            throw new TokenResetExpired("Token Reset Expired");
 
         }
 

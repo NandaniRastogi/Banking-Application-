@@ -32,14 +32,17 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setNotificationType(type);
         notification.setUser(user);
 
-        notificationRepo.save(notification);
-
         if (channel == NotificationChannel.EMAIL) {
+            System.out.print("Notification sent");
             emailService.sendEmail(
                     user.getEmail(),
                     type.name(),
                     message);
         }
+
+        notification.setNotificationStatus(NotificationStatus.SENT);
+
+        notificationRepo.save(notification);
 
     }
 

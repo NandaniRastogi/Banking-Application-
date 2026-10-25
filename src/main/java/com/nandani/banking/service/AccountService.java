@@ -1,9 +1,9 @@
 package com.nandani.banking.service;
 
-import java.math.BigDecimal;
 import java.util.List;
 
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import com.nandani.banking.dto.AccountResponse;
 import com.nandani.banking.dto.CreateAccountRequest;
@@ -13,12 +13,12 @@ public interface AccountService {
 
     Account createAccount(CreateAccountRequest request);
 
-    Account getAccountById(Long id) throws Exception;
+    Account getAccountById(Long id);
 
-    List<Account> getMyAccounts() throws UsernameNotFoundException;
+    List<Account> getMyAccounts();
 
-    void closeAccount(Long id) throws Exception;
+    void closeAccount(Long id);
 
-    // Stri checkBalance(Long id);
+    Page<AccountResponse> getAllRegisteredAccount(Long id, Pageable pageable);
 
 }

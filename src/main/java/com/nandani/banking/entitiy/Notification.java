@@ -35,7 +35,8 @@ public class Notification {
         PASSWORD_RESET,
         DEPOSIT,
         WITHDRAWAL,
-        TRANSFER
+        TRANSFER,
+        EMAILVERIFICATION
 
     }
 

@@ -6,8 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.catalina.mapper.Mapper;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -23,13 +24,19 @@ import com.nandani.banking.entitiy.Notification.NotificationChannel;
 import com.nandani.banking.entitiy.Notification.NotificationType;
 import com.nandani.banking.entitiy.Transaction.TransactionStatus;
 import com.nandani.banking.entitiy.Transaction.TransactionType;
+import com.nandani.banking.exception.AccountIsNotActiveException;
+import com.nandani.banking.exception.IdNotFoundException;
+import com.nandani.banking.exception.InsufficientException;
+import com.nandani.banking.exception.InvalideUserException;
+import com.nandani.banking.exception.NotAllowedToAccessAnotherApi;
+import com.nandani.banking.exception.ReceiverAccountIsNotException;
+import com.nandani.banking.exception.SenderAccountIsNotActive;
+import com.nandani.banking.exception.TransactionIdNotFoundException;
 import com.nandani.banking.repository.AccountRepository;
 import com.nandani.banking.repository.UserRepository;
 import com.nandani.banking.service.NotificationService;
 import com.nandani.banking.service.TransactionService;
-import com.nandani.banking.dto.TransferRequest;
 
-import jakarta.persistence.Id;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 
@@ -43,14 +50,15 @@ public class TransactionServiceImpl implements TransactionService {
     private final AccountRepository accountRepository;
     private final NotificationService notificationService;
 
-    public boolean isValidUser(Long id) throws Exception {
+    public boolean isValidUser(Long id) {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        Account account = accountRepository.findById(id).orElseThrow(() -> new Exception("Id not Found Exception"));
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() -> new IdNotFoundException("Id not Found Exception"));
 
         if (account.getUser().getId().equals(user.getId())) {
 
@@ -63,17 +71,18 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Transactional
     @Override
-    public TransactionResponseDto deposit(DepositRequest request) throws Exception {
+    public TransactionResponseDto deposit(DepositRequest request) {
 
         if (!isValidUser(request.getAccountId())) {
-            throw new Exception("Invalid User ");
+            throw new InvalideUserException("Invalid Details You are not authorized for the Transaction ");
         }
 
         Account account = accountRepository.findById(request.getAccountId())
-                .orElseThrow(() -> new Exception("Id not Found Exception"));
+                .orElseThrow(() -> new IdNotFoundException("Id not Found Exception"));
 
-        if (account.getAccountStatus() != AccountStatus.ACTIVE)
-            throw new Exception("Account is not Active  ");
+        if (account.getAccountStatus() != AccountStatus.ACTIVE) {
+            throw new AccountIsNotActiveException("Your Account is not Active");
+        }
 
         BigDecimal amount = account.getBalance().add(request.getAmount());
 
@@ -102,17 +111,18 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Transactional
     @Override
-    public TransactionResponseDto withdraw(TransactionWithdrawRequestDto request) throws Exception {
+    public TransactionResponseDto withdraw(TransactionWithdrawRequestDto request) {
 
         if (!isValidUser(request.getAccountId())) {
-            throw new Exception("Invalid User ");
+            throw new InvalideUserException("Invalid User ");
         }
 
         Account account = accountRepository.findById(request.getAccountId())
-                .orElseThrow(() -> new Exception("Id not Found Exception"));
+                .orElseThrow(() -> new IdNotFoundException("Id not Found Exception"));
 
-        if (account.getAccountStatus() != AccountStatus.ACTIVE)
-            throw new Exception("Account is not Active  ");
+        if (account.getAccountStatus() != AccountStatus.ACTIVE) {
+            throw new AccountIsNotActiveException("Account is not Active  Exception");
+        }
 
         // if(!(account.getBalance().compareTo())
 
@@ -144,30 +154,30 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Transactional
     @Override
-    public TransactionResponseDto transfer(com.nandani.banking.dto.TransferRequest request) throws Exception {
+    public TransactionResponseDto transfer(com.nandani.banking.dto.TransferRequest request) {
 
         if (!isValidUser(request.getAccountId())) {
-            throw new Exception("Invalid User ");
+            throw new InvalideUserException("Invalid User ");
         }
 
         if (!isValidUser(request.getDestinationAccountId())) {
-            throw new Exception("Invalid User ");
+            throw new InvalideUserException("Invalid User ");
         }
 
         Account account = accountRepository.findById(request.getAccountId())
-                .orElseThrow(() -> new Exception("Id not Found Exception"));
+                .orElseThrow(() -> new IdNotFoundException("Id not Found Exception"));
 
         Account destAccount = accountRepository.findById(request.getDestinationAccountId())
-                .orElseThrow(() -> new Exception("Id not Found Exception"));
+                .orElseThrow(() -> new IdNotFoundException("Id not Found Exception"));
 
         if (account.getAccountStatus() != AccountStatus.ACTIVE)
-            throw new Exception("Sender Account is not Active  ");
+            throw new SenderAccountIsNotActive("Sender Account is not Active  ");
 
         if (destAccount.getAccountStatus() != AccountStatus.ACTIVE)
-            throw new Exception("Receiver Account is not Active  ");
+            throw new ReceiverAccountIsNotException("Receiver Account is not Active  ");
 
         if (account.getBalance().compareTo(request.getAmount()) < 0) {
-            throw new Exception("Insufficient balance");
+            throw new InsufficientException("Insufficient balance");
         }
 
         destAccount.setBalance(destAccount.getBalance().add(request.getAmount()));
@@ -198,22 +208,22 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public TransactionResponseDto getTransactionById(Long id) throws Exception {
+    public TransactionResponseDto getTransactionById(Long id) {
 
         Transaction transaction = transactionRepository.findById(id)
-                .orElseThrow(() -> new Exception("Transaction id is not found Exception"));
+                .orElseThrow(() -> new TransactionIdNotFoundException("Transaction id is not found Exception"));
 
         Account account = transaction.getAccount();
 
         if (!isValidUser(id))
-            throw new Exception("Not allowed to access another api");
+            throw new NotAllowedToAccessAnotherApi("Not allowed to access another api");
 
         return modelmapper.map(transaction, TransactionResponseDto.class);
 
     }
 
     @Override
-    public List<TransactionResponseDto> getMyTransactions() throws Exception {
+    public List<TransactionResponseDto> getMyTransactions() {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -221,7 +231,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         Account account = accountRepository.findById(user.getId())
-                .orElseThrow(() -> new Exception("Id not Found Exception"));
+                .orElseThrow(() -> new IdNotFoundException("Id not Found Exception"));
 
         List<TransactionResponseDto> list = new ArrayList<>();
 
@@ -230,6 +240,17 @@ public class TransactionServiceImpl implements TransactionService {
         }
 
         return list;
+    }
+
+    @Override
+    public Page<Transaction> transactionGetByAdmin(
+            Long userId,
+            Pageable pageable) {
+
+        Page<Transaction> transPage = transactionRepository.findById(userId, pageable);
+
+        return transPage;
+
     }
 
 }

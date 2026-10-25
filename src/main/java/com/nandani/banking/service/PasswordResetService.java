@@ -7,6 +7,6 @@ public interface PasswordResetService {
 
     String generateRandomToken(ForgotPasswordRequest forgotPasswordRequest);
 
-    String validateAndResetPassword(ResetPasswordRequest resetPasswordRequest) throws Exception;
+    String validateAndResetPassword(ResetPasswordRequest resetPasswordRequest);
 
 }

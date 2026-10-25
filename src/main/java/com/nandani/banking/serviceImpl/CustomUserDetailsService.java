@@ -1,14 +1,12 @@
 package com.nandani.banking.serviceImpl;
 
-import java.util.Optional;
-
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.nandani.banking.repository.UserRepository;
-import lombok.AllArgsConstructor;
+
 import lombok.RequiredArgsConstructor;
 
 import com.nandani.banking.entitiy.User;

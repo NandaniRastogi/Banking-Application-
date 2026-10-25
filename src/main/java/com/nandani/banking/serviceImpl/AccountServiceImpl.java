@@ -2,11 +2,12 @@ package com.nandani.banking.serviceImpl;
 
 import java.math.BigDecimal;
 import java.security.SecureRandom;
-import java.security.Security;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
 
+import java.util.List;
+
+import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -17,16 +18,21 @@ import com.nandani.banking.dto.CreateAccountRequest;
 import com.nandani.banking.entitiy.Account;
 import com.nandani.banking.entitiy.User;
 import com.nandani.banking.entitiy.Account.AccountStatus;
+import com.nandani.banking.exception.IdNotFoundException;
+import com.nandani.banking.exception.OnlyActiveAccountClosed;
+import com.nandani.banking.exception.UnauthorizedAccountAccessException;
 import com.nandani.banking.repository.AccountRepository;
 import com.nandani.banking.repository.UserRepository;
 import com.nandani.banking.service.AccountService;
 
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
 
+    private final ModelMapper modelmapper;
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
 
@@ -60,10 +66,10 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Account getAccountById(Long id) throws Exception {
+    public Account getAccountById(Long id) {
 
         Account account = accountRepository.findById(id)
-                .orElseThrow(() -> new Exception("Id not Found Exception"));
+                .orElseThrow(() -> new IdNotFoundException("Id not Found Exception"));
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email)
@@ -73,12 +79,12 @@ public class AccountServiceImpl implements AccountService {
             return account;
         }
 
-        throw new Exception("You are not authorized to access this account");
+        throw new UnauthorizedAccountAccessException("You are not authorized to access this account");
 
     }
 
     @Override
-    public List<Account> getMyAccounts() throws UsernameNotFoundException {
+    public List<Account> getMyAccounts() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User Not Found"));
@@ -90,15 +96,24 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public void closeAccount(Long id) throws Exception {
+    public void closeAccount(Long id) {
 
         Account account = getAccountById(id);
         if (account.getAccountStatus() != AccountStatus.ACTIVE) {
-            throw new Exception("Only active account can be closed");
+            throw new OnlyActiveAccountClosed("Only active account can be closed");
         }
 
         account.setAccountStatus(AccountStatus.CLOSED);
         accountRepository.save(account);
+
+    }
+
+    @Override
+    public Page<AccountResponse> getAllRegisteredAccount(Long id, Pageable pageable) {
+
+        Page<Account> page = accountRepository.findByUserId(id, pageable);
+
+        return page.map(account -> modelmapper.map(account, AccountResponse.class));
 
     }
 

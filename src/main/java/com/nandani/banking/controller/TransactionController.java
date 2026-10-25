@@ -27,8 +27,7 @@ public class TransactionController {
     private final TransactionService transactionService;
 
     @PostMapping("/deposit")
-    public ResponseEntity<TransactionResponseDto> depositAmount(@Valid @RequestBody DepositRequest depositRequest)
-            throws Exception {
+    public ResponseEntity<TransactionResponseDto> depositAmount(@Valid @RequestBody DepositRequest depositRequest) {
 
         TransactionResponseDto transactionResponseDto = transactionService.deposit(depositRequest);
 
@@ -38,7 +37,7 @@ public class TransactionController {
 
     @PostMapping("/withdraw")
     public ResponseEntity<TransactionResponseDto> withdrawAmount(
-            @Valid @RequestBody TransactionWithdrawRequestDto transactionWithdrawRequestDto) throws Exception {
+            @Valid @RequestBody TransactionWithdrawRequestDto transactionWithdrawRequestDto) {
 
         TransactionResponseDto transactionResponseDto = transactionService.withdraw(transactionWithdrawRequestDto);
 
@@ -48,7 +47,7 @@ public class TransactionController {
 
     @PostMapping("/transfer")
     public ResponseEntity<TransactionResponseDto> transferAmount(
-            @Valid @RequestBody TransferRequest transferRequest) throws Exception {
+            @Valid @RequestBody TransferRequest transferRequest) {
 
         TransactionResponseDto transactionResponseDto = transactionService.transfer(transferRequest);
 
@@ -57,13 +56,13 @@ public class TransactionController {
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<TransactionResponseDto> getTransactionById(@PathVariable Long id) throws Exception {
+    public ResponseEntity<TransactionResponseDto> getTransactionById(@PathVariable Long id) {
 
         return ResponseEntity.ok(transactionService.getTransactionById(id));
     }
 
     @GetMapping
-    public ResponseEntity<List<TransactionResponseDto>> getMyTransaction() throws Exception {
+    public ResponseEntity<List<TransactionResponseDto>> getMyTransaction() {
 
         return ResponseEntity.ok(transactionService.getMyTransactions());
     }

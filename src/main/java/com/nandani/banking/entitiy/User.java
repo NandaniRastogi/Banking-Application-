@@ -15,6 +15,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -86,4 +87,9 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<Account> account;
 
+    @OneToOne(mappedBy = "user")
+    private LogingOtp loginOtp;
+
+    @OneToOne(mappedBy = "user")
+    private PhoneOtp phoneOtp;
 }
